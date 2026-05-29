@@ -18,7 +18,7 @@ MQTT_HOST = secrets.MQTT_HOST
 MQTT_PORT = getattr(secrets, "MQTT_PORT", 1883)
 MQTT_USER = getattr(secrets, "MQTT_USER", "")
 MQTT_PASS = getattr(secrets, "MQTT_PASS", "")
-DEVICE_ID = getattr(secrets, "DEVICE_ID", "pico_scd40_living_room")
+DEVICE_ID = getattr(secrets, "DEVICE_ID", "ENTER_NAME_FOR_DEVICE")
 
 # I2C: GP16=SDA (physical pin 21), GP17=SCL (physical pin 22).
 I2C_ID = 0
