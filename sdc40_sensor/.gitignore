@@ -1,0 +1,4 @@
+secrets.py
+crashlog.txt
+sensor_data.txt
+*.log
