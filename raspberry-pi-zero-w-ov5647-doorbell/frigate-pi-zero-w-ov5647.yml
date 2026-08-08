@@ -39,13 +39,13 @@ cameras:
         days: 7
       alerts:
         retain:
-          days: 30
+          days: 7
           mode: motion
       detections:
         retain:
-          days: 30
+          days: 7
           mode: motion
     snapshots:
       enabled: true
       retain:
-        default: 30
+        default: 7
