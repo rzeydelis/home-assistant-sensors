@@ -1,0 +1,10 @@
+table inet rpcam_guard {
+    chain input {
+        type filter hook input priority 0; policy accept;
+
+        # Replace this example address with the reserved LAN address of the
+        # Frigate host before loading the rules.
+        ip saddr 192.168.1.10 tcp dport 5000 counter accept comment "Allow Frigate"
+        tcp dport 5000 counter drop comment "Block other camera clients"
+    }
+}
