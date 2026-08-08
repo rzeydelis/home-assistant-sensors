@@ -1,0 +1,8 @@
+# Merge these device mappings into the existing Frigate service.
+services:
+  frigate:
+    devices:
+      # Intel UHD 605 render node for VAAPI H.264 decoding.
+      - /dev/dri/renderD128:/dev/dri/renderD128
+      # Google Coral M.2/PCIe Edge TPU for object detection.
+      - /dev/apex_0:/dev/apex_0
