@@ -26,6 +26,7 @@ so the stream was changed to:
 - 3 Mbps to preserve roughly the same bits per frame
 - a 30-frame keyframe interval, or one keyframe per second
 - a one-second systemd restart delay after a disconnected TCP consumer
+- seven-day retention for motion, alert, and detection recordings and snapshots
 
 Frigate detection remains at 5 FPS. Raising detection to 30 FPS would waste
 CPU and Coral capacity without improving the live view.
@@ -38,6 +39,8 @@ CPU and Coral capacity without improving the live view.
   matching Frigate/go2rtc configuration.
 - [`docker-compose.devices.yml`](docker-compose.devices.yml) shows the Coral
   and Intel GPU device mappings required by the Frigate container.
+- [`nftables/rpcam-guard.nft`](nftables/rpcam-guard.nft) restricts the raw
+  camera feed to the Frigate host.
 
 Replace the example Pi address `192.168.1.50` in the Frigate snippet with the
 camera's reserved LAN address.
@@ -57,6 +60,40 @@ sudo systemctl enable --now doorbell-camera.service
 
 The service accepts one TCP consumer on port 5000. In this setup, that consumer
 is Frigate's bundled go2rtc process.
+
+## Restrict access to the raw feed
+
+`rpicam-vid` does not authenticate clients on its raw TCP output. Restrict port
+5000 at the Pi so only Frigate can connect. First reserve addresses for both
+hosts, then replace `192.168.1.10` in `nftables/rpcam-guard.nft` with the
+Frigate host's address.
+
+Install and validate the rule fragment:
+
+```bash
+sudo install -d -m 0755 /etc/nftables.d
+sudo install -m 0644 nftables/rpcam-guard.nft \
+  /etc/nftables.d/rpcam-guard.nft
+sudo nft -c -f /etc/nftables.d/rpcam-guard.nft
+sudo nft -f /etc/nftables.d/rpcam-guard.nft
+sudo systemctl enable nftables
+```
+
+Add this line to `/etc/nftables.conf` after any `flush ruleset` directive so
+the fragment is loaded after a reboot:
+
+```nftables
+include "/etc/nftables.d/*.nft"
+```
+
+The table has an accept policy and filters only TCP port 5000, so it does not
+change SSH access or unrelated services. Verify that its allow counter rises
+while Frigate is streaming and that a connection from another LAN device
+times out:
+
+```bash
+sudo nft list table inet rpcam_guard
+```
 
 ## Configure Frigate
 
@@ -134,3 +171,12 @@ sudo systemctl restart doorbell-camera.service
 The earlier command used 15 FPS, 1.5 Mbps, and systemd's three-second restart
 delay. Rolling back Frigate only requires restoring its prior `config.yml` and
 Compose file, then recreating the container.
+
+To roll back only the feed restriction, move the persistent fragment aside and
+remove the live table:
+
+```bash
+sudo mv /etc/nftables.d/rpcam-guard.nft \
+  /etc/nftables.d/rpcam-guard.nft.disabled
+sudo nft delete table inet rpcam_guard
+```
