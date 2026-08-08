@@ -1,0 +1,15 @@
+[Unit]
+Description=Pi Zero W OV5647 Doorbell Camera Stream
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=rpcam
+ExecStart=/usr/bin/rpicam-vid -n -t 0 --width 1280 --height 720 --framerate 30 --bitrate 3000000 --codec h264 --intra 30 --inline --listen -o tcp://0.0.0.0:5000
+Restart=always
+RestartSec=1
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

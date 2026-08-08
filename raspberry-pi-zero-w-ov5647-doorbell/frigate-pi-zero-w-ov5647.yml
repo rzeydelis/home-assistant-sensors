@@ -1,0 +1,51 @@
+# Target camera host: Raspberry Pi Zero W Rev 1.1 with OV5647 Camera Module v1.
+# Replace 192.168.1.50 with the Pi Zero W's reserved LAN address.
+
+ffmpeg:
+  hwaccel_args: preset-vaapi
+
+detectors:
+  coral:
+    type: edgetpu
+    device: pci
+
+go2rtc:
+  streams:
+    doorbell:
+      - "ffmpeg:tcp://192.168.1.50:5000#video=copy"
+
+cameras:
+  doorbell:
+    ffmpeg:
+      output_args:
+        record: preset-record-generic
+      inputs:
+        - path: rtsp://127.0.0.1:8554/doorbell
+          input_args: preset-rtsp-restream
+          roles:
+            - detect
+            - record
+    detect:
+      enabled: true
+      width: 1280
+      height: 720
+      fps: 5
+    objects:
+      track:
+        - person
+    record:
+      enabled: true
+      motion:
+        days: 7
+      alerts:
+        retain:
+          days: 30
+          mode: motion
+      detections:
+        retain:
+          days: 30
+          mode: motion
+    snapshots:
+      enabled: true
+      retain:
+        default: 30
